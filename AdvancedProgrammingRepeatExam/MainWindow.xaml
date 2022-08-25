@@ -7,6 +7,8 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
+        <Button x:Name="btn_Start" Content="Start" HorizontalAlignment="Center" Margin="0,345,0,0" VerticalAlignment="Top" Width="71" Click="btn_StartClick"/>
+        <ProgressBar x:Name="progressBar" HorizontalAlignment="Center" Height="10" Margin="0,408,0,0" VerticalAlignment="Top" Width="551"/>
 
     </Grid>
 </Window>

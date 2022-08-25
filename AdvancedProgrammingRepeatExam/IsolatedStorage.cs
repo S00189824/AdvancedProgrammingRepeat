@@ -12,106 +12,95 @@ namespace AdvancedProgrammingRepeatExam
 {
     internal class IsolatedStorage
     {
-        //create an object to be used by lock()
-        public static Object synObj = new Object();
+        //isolated store - folder - will hold our own named folders and isolated storage files
         private IsolatedStorageFile store;
 
-        //the name of the folder we will create in each isolated store
-        private string folderName;
+        //create the name of a named folder
+        string folderName;
 
-        //the path to the file - we will create a text file for each isolated store
-        private string pathToTextFile;
+        //path to an isolated storage file
+        string pathToFile;
 
-        //constructor method which creates the isolated storage
-        public IsolatedStorage(int selIndex)
+        public IsolatedStorage()
         {
-            //give the folder a name
-            folderName = "ColourFolder";
-            //set the path to the text file
-            pathToTextFile = String.Format("{0}\\____File.txt", folderName);
+            //setting up the store to be isolated by user and assembly
+            //option 1 
+            //store = IsolatedStorageFile.GetUserStoreForAssembly();
+            //option 2
+            // store = IsolatedStorageFile.GetStore(IsolatedStorageScope.User | IsolatedStorageScope.Assembly, null, null);
 
-            //set the isolation storage type and access the store (obtain the isolated store)
-            if (selIndex == 0)
-                store = IsolatedStorageFile.GetUserStoreForDomain();
-            else
-                store = IsolatedStorageFile.GetUserStoreForAssembly();
-        }
+            //change the isolation type to user, assembly and domain
+            store = IsolatedStorageFile.GetUserStoreForDomain();
 
-        //method which writes a colour to ColourFile.txt in the selected Isolated store 
-        public void writeToStorage(Object colourFromUser)
-        {
-            string colourToSaveToStorage = ____FromUser.ToString();
+            folderName = "FolderForIsolatedStorage";
 
-            //check if the isolated store was obtained successfully (the code for that is in the constructor method)
-            if (store != null)
-            {
-
-                //synchronise access to the isolated storage text file 
-                Monitor.Enter(synObj);
-                try
-                {
-                    //check if the folder exists.  If it does not, then create it
-                    if (!store.DirectoryExists(folderName))
-                        store.CreateDirectory(folderName);
-
-                    //create the isolated storage file (the text file ColourFile.txt)
-                    //We create a new ColourFile.txt every time this method is called
-                    //- the new text file will overwrite any existing text file 
-                    //(notice the FileMode.Create in the code below)
-                    using (IsolatedStorageFileStream isoStorageTxtFile =
-                        store.OpenFile(pathToTextFile, FileMode.Create, FileAccess.Write))
-                    {
-                        using (StreamWriter writer = new StreamWriter(isoStorageTxtFile))
-                        {
-                            writer.Write(colourToSaveToStorage);
-                            MessageBox.Show("All good - colour saved to ColourFile.txt");
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    MessageBox.Show(e.Message);
-                }
-                finally
-                {
-                    Monitor.Pulse(synObj);
-                    Monitor.Wait(synObj);
-                }
-            }
+            pathToFile = String.Format("{0}\\IsolatedStorage.txt", folderName);
 
         }
 
-        //method which reads the colour from ColourFile.txt (which is placed in the selected Isolated store) 
-        public void readFromStorage()
+        //method which writes to the isolated storage file
+        public Boolean WriteToStorage(string s)
         {
-            if (store != null)
+            //check if the store was correctly created
+            if (store == null)
             {
-                Monitor.Enter(synObj);
-                try
-                {
-                    //read from the text file ColourFile.txt
-                    using (IsolatedStorageFileStream isoStorageTxtFile = store.OpenFile(pathToTextFile, FileMode.Open, FileAccess.Read))
-                    {
-                        using (StreamReader reader = new StreamReader(isoStorageTxtFile))
-                        {
-                            string colourFromTextFile = reader.ReadLine();
+                return false;
+            }
 
-                            //we have to apply the colour as the background of the main Window
-                            // we use Dispatcher.Invoke in order to accesss the controls on the main Window
-                            // we need to point to an instance of the MainWindow class and then call Dispatcher.Invoke() on it
+            try
+            {
+                //check if the folder exists or not. If it does not exist then create it
+                if (!store.DirectoryExists(folderName))
+                    //create the named folder inside the store
+                    store.CreateDirectory(folderName);
+
+                //create the isolated storage file
+                using (IsolatedStorageFileStream IsoStoragefile =
+                    store.OpenFile(pathToFile, FileMode.OpenOrCreate, FileAccess.Write))
+                {
+                    using (StreamWriter writer = new StreamWriter(IsoStoragefile))
+                    {
+                        writer.Write(s);
+                    }
+                }
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return false;
+            }
+        }
+
+        //method to read from the isolated storage file
+        public String ReadFromStorage()
+        {
+            //check if the store was correctly created
+            if (store == null)
+            {
+                return string.Empty;
+            }
+
+            try
+            {
+                //access the IsolatedStorageFileStream - our isolated storage file
+                using (IsolatedStorageFileStream IsoStoragefile =
+                    store.OpenFile(pathToFile, FileMode.Open, FileAccess.Read))
+                {
+                    using (StreamReader reader = new StreamReader(IsoStoragefile))
+                    {
+                        return reader.ReadToEnd();
                     }
 
                 }
-                catch (Exception e)
-                {
-                    MessageBox.Show(e.Message);
-                }
-                finally
-                {
-                    Monitor.Pulse(synObj);
-                    Monitor.Wait(synObj);
-                }
             }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return string.Empty;
+            }
+
         }
     }
 }
